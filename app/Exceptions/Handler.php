@@ -6,6 +6,7 @@ use Throwable;
 use App\Traits\ApiResponser;
 use Illuminate\Database\QueryException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -81,6 +82,8 @@ class Handler extends ExceptionHandler
             if ($errorCode == 1451) {
                 return $this->errorResponse('Cannot remove this resource permanently. It is related with any other resource', 409);
             }
+        } elseif ($e instanceof TokenMismatchException) {
+            return redirect()->back()->withInput($request->input());
         }
 
         if (config('app.debug')) {
@@ -102,10 +105,14 @@ class Handler extends ExceptionHandler
      */
     protected function unauthenticated($request, AuthenticationException $exception)
     {
-        // return $request->expectsJson()
-        //             ? response()->json(['error' => 'Unauthenticated.'], 401)
-        //             : redirect()->guest($exception->redirectTo() ?? route('login'));
-        return $this->errorResponse('Unauthenticated.', 401);
+        return $request->expectsJson()
+                    ? response()->json(['error' => 'Unauthenticated.'], 401)
+                    : redirect()->guest($exception->redirectTo() ?? route('login'));
+        // if ($this->isFrontend($request)) {
+        //     return redirect()->guest('login');
+        // }
+
+        // return $this->errorResponse('Unauthenticated.', 401);
     }
 
     /**
@@ -118,7 +125,19 @@ class Handler extends ExceptionHandler
     protected function convertValidationExceptionToResponse(ValidationException $e, $request)
     {
         $errors = $e->validator->errors()->getMessages();
+
+        // if ($this->isFrontend($request)) {
+        //     return $request->ajax() ? response()->json($e, 422) : redirect()
+        //         ->back()
+        //         ->withInput($request->input())
+        //         ->withErrors($errors);
+        // }
         
         return $this->errorResponse($errors, 422);
     }
+
+    // private function isFrontend($request)
+    // {
+    //     return $request->acceptsHtml() && collect($request->route()->middleware())->contains('web');
+    // }
 }
