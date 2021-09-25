@@ -32,6 +32,7 @@ class User extends Authenticatable
         'verified',
         'verification_token',
         'admin',
+        'role_id'
     ];
 
     protected $table = 'users';

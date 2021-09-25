@@ -24,6 +24,7 @@ class CreateUsersTable extends Migration
             $table->string('verified')->default(User::UNVERIFIED_USER);
             $table->string('verification_token')->nullable();
             $table->string('admin')->default(User::REGULAR_USER);
+            $table->foreignId('role_id')->nullable();
             $table->softDeletes(); //deleted_at
             $table->timestamps();
         });
