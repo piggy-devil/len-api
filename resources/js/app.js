@@ -32,6 +32,15 @@
 // });
 
 import { createApp } from 'vue';
-import App from "../js/components/App.vue";
+import App from "../js/pages/layout/App.vue";
+import router from './components/router';
+import DashboardLayout from '../js/pages/layout/DashboardLayout.vue';
+import EmptyLayout from '../js/pages/layout/EmptyLayout.vue';
 
-createApp(App).mount("#app");
+const app = createApp(App);
+
+app.component('default-layout', DashboardLayout);
+app.component('empty-layout', EmptyLayout);
+    
+    app.use(router);
+    app.mount('#app');
