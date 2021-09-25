@@ -14,6 +14,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use League\OAuth2\Server\Exception\OAuthServerException;
 
 class Handler extends ExceptionHandler
 {
@@ -24,7 +25,7 @@ class Handler extends ExceptionHandler
      * @var array
      */
     protected $dontReport = [
-        //
+        OAuthServerException::class,
     ];
 
     /**
@@ -105,14 +106,14 @@ class Handler extends ExceptionHandler
      */
     protected function unauthenticated($request, AuthenticationException $exception)
     {
-        return $request->expectsJson()
-                    ? response()->json(['error' => 'Unauthenticated.'], 401)
-                    : redirect()->guest($exception->redirectTo() ?? route('login'));
-        // if ($this->isFrontend($request)) {
-        //     return redirect()->guest('login');
-        // }
+        // return $request->expectsJson()
+        //             ? response()->json(['error' => 'Unauthenticated.'], 401)
+        //             : redirect()->guest($exception->redirectTo() ?? route('login'));
+        if ($this->isFrontend($request)) {
+            return redirect()->guest('login');
+        }
 
-        // return $this->errorResponse('Unauthenticated.', 401);
+        return $this->errorResponse('Unauthenticated.', 401);
     }
 
     /**
@@ -126,18 +127,18 @@ class Handler extends ExceptionHandler
     {
         $errors = $e->validator->errors()->getMessages();
 
-        // if ($this->isFrontend($request)) {
-        //     return $request->ajax() ? response()->json($e, 422) : redirect()
-        //         ->back()
-        //         ->withInput($request->input())
-        //         ->withErrors($errors);
-        // }
+        if ($this->isFrontend($request)) {
+            return $request->ajax() ? response()->json($errors, 422) : redirect()
+                ->back()
+                ->withInput($request->input())
+                ->withErrors($errors);
+        }
         
         return $this->errorResponse($errors, 422);
     }
 
-    // private function isFrontend($request)
-    // {
-    //     return $request->acceptsHtml() && collect($request->route()->middleware())->contains('web');
-    // }
+    private function isFrontend($request)
+    {
+        return $request->acceptsHtml() && collect($request->route()->middleware())->contains('web');
+    }
 }
