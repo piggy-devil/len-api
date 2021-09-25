@@ -18,7 +18,8 @@ use Illuminate\Support\Facades\Route;
 //     return view('welcome');
 // });
 
-Route::view('/', 'welcome')->middleware('guest');
+// Route::view('/', 'welcome')->middleware('guest');
+Route::view('/', 'landing')->middleware('guest');
 
 Auth::routes();
 
